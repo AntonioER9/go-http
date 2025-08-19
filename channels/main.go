@@ -1,6 +1,9 @@
 package main
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 func main() {
 	links := []string{
@@ -9,17 +12,26 @@ func main() {
 		"http://golang.org",
 	}
 
+	c := make(chan string)
+
 	for _, link := range links {
-		checkLink(link)
+		go checkLink(link, c)
+	}
+
+	fmt.Println("Checking links...")
+	for i := 0; i < len(links); i++ {
+		fmt.Println(<-c)
 	}
 
 }
 
-func checkLink(link string) {
-	_, err := http.Get(link)
+func checkLink(link string, c chan string) {
+	_, err := http.Get(link) //Blocking call!
 	if err != nil {
-		println(link, "is down")
+		fmt.Println(link, "is down")
+		c <- "Might be down"
 		return
 	}
-	println(link, "is up")
+	fmt.Println(link, "is up")
+	c <- "Is up"
 }
